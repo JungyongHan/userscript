@@ -3,7 +3,7 @@
 // @namespace     KOROAD LEARNING
 // @description   AUTO SKIPPING VIDEO
 // @author        Absolute
-// @version       1.92
+// @version       1.93
 // @include       *://study.labs.hunet.co.kr/learning/*
 // @compatible    Chrome Google Chrome + Tampermonkey
 // @license       MIT
