@@ -16,7 +16,6 @@
 (function() {
     const scri_version = 1.95
     let number_id = '';
-
     const ended_event = (e) => {
       if(typeof pageObj !== 'undefined'){
         var indexSeq = $("#openInfo input[name=indexSeq]").val();
@@ -72,9 +71,14 @@
               try{
                 contentWindow.document.querySelector('#mediaPlay').click();
               }catch{}
-              contentWindow.document.querySelectorAll('video').forEach((vid) => {
-                video_checker(vid);
-              });
+                let vids = contentWindow.document.querySelectorAll('video');
+                if(vids.length > 0){
+                  vids.forEach((vid) => {
+                    video_checker(vid);
+                  });
+                }else{
+                  this.document.querySelector('.btn-play-type02').click();
+                }
             });
           }else{
             let vid = this.document.querySelector('video');
