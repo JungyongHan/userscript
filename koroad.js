@@ -3,16 +3,18 @@
 // @namespace     KOROAD LEARNING
 // @description   AUTO SKIPPING VIDEO
 // @author        Absolute
-// @version       1.93
+// @version       1.94
 // @include       *://study.labs.hunet.co.kr/learning/*
 // @compatible    Chrome Google Chrome + Tampermonkey
 // @license       MIT
+// @downloadURL  https://raw.githubusercontent.com/JungyongHan/userscript/main/koroad.js
+// @updateURL    https://raw.githubusercontent.com/JungyongHan/userscript/main/koroad.js
 // @copyright     Absolute, 2024-Mar-04
 // ==/UserScript==
 
 
 (function() {
-    const scri_version = 1.92
+    const scri_version = 1.94
     let number_id = '';
 
     const ended_event = (e) => {
