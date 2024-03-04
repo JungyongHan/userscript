@@ -27,10 +27,12 @@
         GL_ajax.callApi(config).done(function (data, status, jqXHR) {
           if(data.passYn){
             var strNextItemIndex = $("#indexItemInfo input[name=nextIndexInfo]").val();
+            if(strNextItemIndex === ''){
+              window.close();
+            } 
             var nextLearningIndexSeq = $("#indexItemInfo input[name=nextLearningIndexSeq]").val();
             var nextRunSubjectItemIndexSeq = $("#indexItemInfo input[name=nextRunSubjectItemIndexSeq]").val();
             var nextItemIndex = JSON.parse(strNextItemIndex);
-
             pageObj.goIndex(nextLearningIndexSeq, nextRunSubjectItemIndexSeq, nextItemIndex.indexSeq);
           }else{
             pageObj.movePage('next');
