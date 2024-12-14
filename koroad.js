@@ -14,7 +14,7 @@
 
 
 (function() {
-    const scri_version = 1.95
+    const scri_version = 1.96
     let number_id = '';
     const ended_event = (e) => {
       if(typeof pageObj !== 'undefined'){
@@ -50,6 +50,7 @@
         if(vid.paused){
             vid.play();
         }
+        vid.playbackRate=2;
         vid.removeEventListener('ended', ended_event);
         vid.addEventListener('ended', ended_event ,false);
     };
