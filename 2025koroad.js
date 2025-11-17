@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         NEW KOROAD LEARNING HELPER
-// @version      1.1.5
-// @include      *://study.hunet.co.kr/Study/Main.aspx?courseCd=*
+// @version      1.1.6
+// @include      *://study.hunet.co.kr/Study/Main.aspx*
 // @downloadURL  https://raw.githubusercontent.com/JungyongHan/userscript/main/2025koroad.js
 // @updateURL    https://raw.githubusercontent.com/JungyongHan/userscript/main/2025koroad.js
 // ==/UserScript==
 (function () {
-    console.log("hook1.1.5", location.href);
+    console.log("hook1.1.6", location.href);
     window.addEventListener('load', function () {
         let btnNext = document.querySelector('#btn-next');
         if(btnNext && btnNext.onclick) {
