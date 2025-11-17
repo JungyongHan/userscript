@@ -1,13 +1,12 @@
 // ==UserScript==
 // @name         NEW KOROAD LEARNING HELPER
-// @version      1.1.0
-// @include      *://study.hunet.co.kr/Study/*
+// @version      1.1.5
+// @include      *://study.hunet.co.kr/Study/Main.aspx?courseCd=*
 // @downloadURL  https://raw.githubusercontent.com/JungyongHan/userscript/main/2025koroad.js
 // @updateURL    https://raw.githubusercontent.com/JungyongHan/userscript/main/2025koroad.js
 // ==/UserScript==
 (function () {
-    console.log("hook1.1.0", location.href);
-
+    console.log("hook1.1.5", location.href);
     window.addEventListener('load', function () {
         let btnNext = document.querySelector('#btn-next');
         if(btnNext && btnNext.onclick) {
@@ -28,8 +27,8 @@
                 iframes.forEach(ele => {
                     try {
                         // 메인 frame(window) 처리
-                        if (ele.id === 'main' && ele.contentWindow && ele.contentWindow.edited !== true) {
-                            ele.contentWindow.eval(hooking_fn(ele.contentWindow.fnPlayEnd.toString()));
+                        if (ele.name === 'main' && ele.contentWindow) {
+                            ele.contentWindow.eval(hooking_fn(ele.contentWindow?.fnPlayEnd?.toString()));
                             let btnNext = ele.contentWindow.document.querySelector('#btn-next');
                             if (btnNext && btnNext.onclick) {
                                 ele.contentWindow.eval(`document.querySelector('#btn-next').onclick = ${btnNext.onclick.toString().replace("alert('영상을 다 보셔야 합니다.');", '')}`);
@@ -44,7 +43,6 @@
                                     console.log("speeed up!!");
                                 });
                             }
-                            ele.contentWindow.edited = true;
                         }
                     } catch (e) {}
                     try {
@@ -77,7 +75,8 @@
                                 cw.document.querySelector('#btn-next').click();
                             }
                             if (cw.movieEnd === false && cw.document.querySelector('a[onclick="Click_MoveNextChapter();"]') !== null) {
-                                cw.eval(hooking_fn(cw.fnStudyStart.toString()));
+                                cw.eval(hooking_fn
+                                (cw.fnStudyStart?.toString()));
                                 cw.document.querySelector('a[onclick="Click_MoveNextChapter();"]').click();
                             }
                         }
@@ -85,23 +84,16 @@
                 });
             }, 1000); // 1초 간격 반복
 
-            // 최초 1회 실행
-            try {
-                if (window.edited !== true) {
-                    window.eval(hooking_fn(fnPlayEnd.toString()));
-                    window.edited = true;
-                }
-            } catch(e) {
-                console.log(e);
-            }
         }, 2000);
     });
 
     const hooking_fn = (str) => {
+        try{
         let temp = str.replace("confirm('다음 차시를 학습하시겠습니까?')", "true");
         temp = temp.replace("'', '');", "'', '');\n} else{\n window.parent.close(); window.close();");
         temp = temp.replace("confirm(confirmMsg)", "true");
         temp = temp.replace("alert('영상을 다 보셔야 합니다.');", "");
         return temp;
+        }catch{}
     };
 })();
