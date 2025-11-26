@@ -1,22 +1,27 @@
 // ==UserScript==
 // @name         NEW KOROAD LEARNING HELPER_WMain
-// @version      1.0.0
+// @version      1.0.1
 // @include      *://study.hunet.co.kr/Study/WMain.aspx*
 // @downloadURL  https://raw.githubusercontent.com/JungyongHan/userscript/main/2025koroad_w.js
 // @updateURL    https://raw.githubusercontent.com/JungyongHan/userscript/main/2025koroad_w.js
 // ==/UserScript==
 (function () {
-    console.log("hook1.0.0", location.href);
+    console.log("hook1.0.1", location.href);
     window.addEventListener('load', function () {
         setTimeout(() => {
             // interval 하나에서 모든 프레임 순회 처리
             setInterval(() => {
-         if(main.document.getElementById("video").querySelector("video").playbackRate < 2.0)
-{
-main.document.getElementById("video").querySelector("video").playbackRate = 2.0;
-let next_call_func = main.fnPlayEnd.toString().match(/fnStudyStart\s*\(([^)]*)\);/)[0];
-main.eval("function fnPlayEnd(){" + next_call_func + "}");
-}
+            let ele = main;
+            if(main?.contentWindow){
+            	ele = main.contentWindow;
+            }
+            
+	         if(ele.document.getElementById("video").querySelector("video").playbackRate < 2.0)
+			{
+				ele.document.getElementById("video").querySelector("video").playbackRate = 2.0;
+				let next_call_func = ele.fnPlayEnd.toString().match(/fnStudyStart\s*\(([^)]*)\);/)[0];
+				ele.eval("function fnPlayEnd(){" + next_call_func + "}");
+			}
             }, 1000); // 1초 간격 반복
 
         }, 2000);
