@@ -650,7 +650,7 @@
             }
 
             const signature = getCurrentSignature(btns);
-            const prevstate = loadState();
+            const prevState = loadState();
 
             if (source === '복원' && prevState.lastSignature === signature) {
                 const retryCount = (prevState.staleRetry || 0) + 1;
