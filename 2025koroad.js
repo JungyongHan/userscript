@@ -29,7 +29,7 @@
 
     function loadStateRaw() {
         try {
-            const raw = sessionStorage.getItem(`${userID}${STORAGE_KEY}`);
+            const raw = sessionStorage.getItem(STORAGE_KEY);
             return raw ? JSON.parse(raw) : { isAuto: false };
         } catch {
             return { isAuto: false };
@@ -40,7 +40,7 @@
         const prev = loadStateRaw();
 
         sessionStorage.setItem(
-            `${userID}${STORAGE_KEY}`,
+            STORAGE_KEY,
             JSON.stringify({ ...prev, isAuto, ...extra })
         );
     }
@@ -50,7 +50,7 @@
     }
 
     function clearState() {
-        sessionStorage.removeItem(`${userID}${STORAGE_KEY}`);
+        sessionStorage.removeItem(STORAGE_KEY);
     }
 
     const isProgressListPage = location.pathname
