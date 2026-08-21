@@ -147,7 +147,7 @@
 
     function getDoneCourses() {
         try {
-            const raw = localStorage.getItem(DONE_COURSES_KEY);
+            const raw = localStorage.getItem(`${userID}${DONE_COURSES_KEY}`);
             return raw ? JSON.parse(raw) : [];
         } catch {
             return [];
@@ -161,7 +161,7 @@
 
         if (!list.includes(courseKey)) {
             list.push(courseKey);
-            localStorage.setItem(DONE_COURSES_KEY, JSON.stringify(list));
+            localStorage.setItem(`${userID}${DONE_COURSES_KEY}`, JSON.stringify(list));
             console.log("💾 완료 과정 저장:", courseKey);
         } else {
             console.log("ℹ️ 이미 완료 목록에 존재:", courseKey);
@@ -170,7 +170,7 @@
 
     function getDailyBlocked() {
         try {
-            const raw = JSON.parse(localStorage.getItem(DAILY_BLOCKED_KEY) || '{}');
+            const raw = JSON.parse(localStorage.getItem(`${userID}${DAILY_BLOCKED_KEY}`) || '{}');
 
             if (raw.date !== todayStr()) {
                 return [];
@@ -191,7 +191,7 @@
             list.push(courseKey);
 
             localStorage.setItem(
-                DAILY_BLOCKED_KEY,
+                `${userID}${DAILY_BLOCKED_KEY}`,
                 JSON.stringify({ date: todayStr(), courses: list })
             );
 
@@ -763,8 +763,8 @@
                 return;
             }
 
-            localStorage.removeItem(DONE_COURSES_KEY);
-            localStorage.removeItem(DAILY_BLOCKED_KEY);
+            localStorage.removeItem(`${userID}${DONE_COURSES_KEY}`);
+            localStorage.removeItem(`${userID}${DAILY_BLOCKED_KEY}`);
 
             console.log("🗑 완료/차단 목록 초기화");
             alert('초기화되었습니다.');
