@@ -172,7 +172,10 @@
                     if (!cw) return;
                     cw.document.querySelectorAll('video').forEach(vid => {
                         if (vid.paused && !vid.ended && vid.readyState >= 2) {
-                            vid.play().catch(() => {});
+                            vid.muted = true;
+                            vid.play().catch((err) => {
+                                console.warn('자동재생 실패:', err.name, err.message);
+                            });
                         }
                     });
                     // ════ Main.aspx ════════════════════════════════
