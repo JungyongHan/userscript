@@ -142,11 +142,17 @@
                         if (!video) return;
 
                         if (video.playbackRate < 2) video.playbackRate = 2;
-                        if (video.paused && !video.ended) video.play();
+                        if (video.paused && !video.ended){
+                        	video.muted = true;
+                        	video.play();
+                    	}
 
                         if (nextBtn && nextBtn.style.display === '') {
                             nextBtn.click();
                         }
+                    	if (video.paused && video.ended){
+                    		notifyParentDone('learningmodule_video_ended');
+                    	}
 
                         if (video.ended && (!nextBtn || nextBtn.style.display !== '')) {
                             notifyParentDone('learningmodule_video_ended');
