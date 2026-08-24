@@ -1,15 +1,19 @@
 // ==UserScript==
 // @name         KOROAD AUTO PROGRESS (Parent)
-// @version      1.7.9
+// @version      1.8.0
 // @include      *://smartlearning.hunet.co.kr/Progress/ProgressList.aspx*
 // @include      *://smartlearning.hunet.co.kr/Home/*
+// @include      *://smartlearning.hunet.co.kr/Diagnosis/Index.aspx*
+// @include      *://smartlearning.hunet.co.kr/Diagnosis/Step01.aspx*
+// @include      *://smartlearning.hunet.co.kr/Diagnosis/Step02.aspx*
+// @include      *://smartlearning.hunet.co.kr/Diagnosis/Step03.aspx*
 // @downloadURL  https://raw.githubusercontent.com/JungyongHan/userscript/main/2025koroad.js
 // @updateURL    https://raw.githubusercontent.com/JungyongHan/userscript/main/2025koroad.js
 // @grant        none
 // ==/UserScript==
 
 (function () {
-    console.log("koroad-parent 1.7.9", location.href);
+    console.log("koroad-parent 1.8.0", location.href);
 
     const STORAGE_KEY = 'koroad_auto_state';
     const DONE_COURSES_KEY = 'koroad_done_courses';
@@ -52,6 +56,273 @@
     function clearState() {
         sessionStorage.removeItem(STORAGE_KEY);
     }
+
+    // ------------------------------------------------------------------
+    // 진단(Diagnosis) 자동화
+    // ------------------------------------------------------------------
+
+    const DIAGNOSIS_STATE_KEY = 'koroad_diagnosis_auto_state';
+    const DIAGNOSIS_INDEX_PATH = '/diagnosis/index.aspx';
+    const DIAGNOSIS_STEP01_PATH = '/diagnosis/step01.aspx';
+    const DIAGNOSIS_STEP02_PATH = '/diagnosis/step02.aspx';
+    const DIAGNOSIS_STEP03_PATH = '/diagnosis/step03.aspx';
+
+    function isDiagnosisPage() {
+        return location.pathname.toLowerCase().includes('/diagnosis/');
+    }
+
+    function loadDiagnosisState() {
+        try {
+            return JSON.parse(
+                sessionStorage.getItem(DIAGNOSIS_STATE_KEY) || '{}'
+            );
+        } catch {
+            return {};
+        }
+    }
+
+    function saveDiagnosisState(extra = {}) {
+        const prev = loadDiagnosisState();
+
+        sessionStorage.setItem(
+            DIAGNOSIS_STATE_KEY,
+            JSON.stringify({
+                ...prev,
+                isAuto: true,
+                startedAt: prev.startedAt || Date.now(),
+                ...extra
+            })
+        );
+    }
+
+    function clearDiagnosisState() {
+        sessionStorage.removeItem(DIAGNOSIS_STATE_KEY);
+    }
+
+    function waitForElement(selector, callback, timeout = 15000) {
+        const found = document.querySelector(selector);
+
+        if (found) {
+            callback(found);
+            return;
+        }
+
+        let resolved = false;
+
+        const observer = new MutationObserver(() => {
+            const el = document.querySelector(selector);
+
+            if (!el || resolved) return;
+
+            resolved = true;
+            observer.disconnect();
+            callback(el);
+        });
+
+        observer.observe(document.documentElement, {
+            childList: true,
+            subtree: true
+        });
+
+        setTimeout(() => {
+            if (resolved) return;
+
+            observer.disconnect();
+
+            const el = document.querySelector(selector);
+
+            if (el) {
+                resolved = true;
+                callback(el);
+            } else {
+                console.warn(`⚠️ 요소 대기 시간 초과: ${selector}`);
+            }
+        }, timeout);
+    }
+
+    // save()를 거치지 않고 saveAnswer()를 직접 호출하여
+    // confirm()/alert() 메시지박스를 완전히 우회한다.
+    function callSaveAnswer(...args) {
+        try {
+            if (typeof window.saveAnswer !== 'function') {
+                console.error('❌ 진단 저장 함수 saveAnswer()를 찾지 못했습니다.');
+                return false;
+            }
+
+            console.log('💾 진단 응답 직접 저장:', args);
+            window.saveAnswer(...args);
+
+            return true;
+        } catch (e) {
+            console.error('❌ 진단 응답 직접 저장 실패:', e);
+            return false;
+        }
+    }
+
+    function runDiagnosisIndex() {
+        console.log('🩺 진단 Index 자동 진행');
+
+        waitForElement('#ContentPlaceHolder1_hlButton', btn => {
+            console.log('➡️ 진단 시작 버튼 클릭');
+            saveDiagnosisState({ step: 'index' });
+            btn.click();
+        });
+    }
+
+    function runDiagnosisStep01() {
+        console.log('🩺 진단 Step01 자동 진행');
+
+        waitForElement(
+            '#ulContent > li:nth-child(1) input[type="checkbox"]',
+            () => {
+                const questionGroups = document.querySelectorAll('#ulContent > li');
+
+                let checkedValues = '';
+                let abilityseqes = '';
+                let selectedCount = 0;
+
+                questionGroups.forEach((group, index) => {
+                    const checkbox = group.querySelector('input[type="checkbox"]');
+                    const abilityInput = document.getElementsByName('ability_seq')[index];
+
+                    if (!checkbox || !abilityInput) {
+                        console.warn(`⚠️ Step01 문항 ${index + 1} 정보를 찾지 못했습니다.`);
+                        return;
+                    }
+
+                    // 요구사항: 아무 체크박스 하나만 선택, 나머지는 미선택 유지
+                    const shouldCheck = selectedCount === 0;
+
+                    checkbox.checked = shouldCheck;
+
+                    if (shouldCheck) {
+                        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+
+                        checkedValues += `${checkbox.value}|`;
+                        abilityseqes += `${abilityInput.value}|`;
+                        selectedCount++;
+                    }
+                });
+
+                if (selectedCount === 0) {
+                    console.error('❌ Step01에서 선택할 체크박스가 없습니다.');
+                    return;
+                }
+
+                console.log(`☑️ Step01 체크 ${selectedCount}개 선택, 직접 저장 실행`);
+
+                saveDiagnosisState({ step: 'step01' });
+
+                setTimeout(() => {
+                    // save() 미사용: confirm/alert 없이 saveAnswer 직접 호출
+                    callSaveAnswer(checkedValues, abilityseqes);
+                }, 500);
+            }
+        );
+    }
+
+    function runDiagnosisStep02() {
+        console.log('🩺 진단 Step02 자동 진행');
+
+        waitForElement('#dvContent input[type="radio"][value="1"]', () => {
+            const questionSeqInputs = [...document.getElementsByName('question_seq')];
+            const abilitySeqInputs = [...document.getElementsByName('ability_seq')];
+
+            if (questionSeqInputs.length === 0) {
+                console.error('❌ Step02 question_seq 항목을 찾지 못했습니다.');
+                return;
+            }
+
+            let questionSeqs = '';
+            let abilityseqes = '';
+            let answers = '';
+
+            for (let i = 0; i < questionSeqInputs.length; i++) {
+                const questionSeq = questionSeqInputs[i]?.value;
+                const abilitySeq = abilitySeqInputs[i]?.value;
+
+                const radio = document.querySelector(
+                    `#dvContent input[name="score${i}"][type="radio"][value="1"]`
+                );
+
+                if (!questionSeq || !abilitySeq || !radio) {
+                    console.warn(`⚠️ Step02 Q${i + 1} 입력 요소를 찾지 못했습니다.`);
+                    return;
+                }
+
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change', { bubbles: true }));
+
+                questionSeqs += `${questionSeq}|`;
+                abilityseqes += `${abilitySeq}|`;
+                answers += '1|';
+            }
+
+            console.log(`☑️ Step02 ${questionSeqInputs.length}개 문항에 value="1" 선택 완료`);
+
+            saveDiagnosisState({ step: 'step02' });
+
+            setTimeout(() => {
+                // 원본 save()의 confirm()/alert() 검증 단계를 거치지 않고 직접 저장
+                callSaveAnswer(questionSeqs, abilityseqes, answers);
+            }, 500);
+        });
+    }
+
+    function runDiagnosisStep03() {
+        console.log('🩺 진단 Step03 완료 → 학습 목록 복귀');
+
+        waitForElement(
+            'a[href="/Progress/ProgressList.aspx"][target="_self"]',
+            link => {
+                saveDiagnosisState({ step: 'step03' });
+
+                setTimeout(() => {
+                    console.log('➡️ 학습 목록으로 이동');
+                    clearDiagnosisState();
+                    link.click();
+                }, 1000);
+            }
+        );
+    }
+
+    function runDiagnosisAutoFlow() {
+        const path = location.pathname.toLowerCase();
+
+        if (path.includes(DIAGNOSIS_INDEX_PATH)) {
+            runDiagnosisIndex();
+            return true;
+        }
+
+        if (path.includes(DIAGNOSIS_STEP01_PATH)) {
+            runDiagnosisStep01();
+            return true;
+        }
+
+        if (path.includes(DIAGNOSIS_STEP02_PATH)) {
+            runDiagnosisStep02();
+            return true;
+        }
+
+        if (path.includes(DIAGNOSIS_STEP03_PATH)) {
+            runDiagnosisStep03();
+            return true;
+        }
+
+        return false;
+    }
+
+    if (isDiagnosisPage()) {
+        window.addEventListener('load', () => {
+            runDiagnosisAutoFlow();
+        });
+
+        return;
+    }
+
+    // ------------------------------------------------------------------
+    // 기존 학습 진행(ProgressList) 자동화
+    // ------------------------------------------------------------------
 
     const isProgressListPage = location.pathname
         .toLowerCase()
@@ -100,11 +371,11 @@
         try {
             const source = window.fn_Captcha?.toString?.() || '';
 
- 
+
             userID = source.match(
                 /\'userId\'\s*:\s*["']([^"']+)["']/
             )?.[1];
-   
+
 
             if (!userID) {
                 console.warn("⚠️ fn_Captcha에서 userID 추출 실패");
@@ -113,7 +384,7 @@
 
 
             console.log("🔑 현재 과정 userID:", userID);
-            
+
         } catch (e) {
             console.warn("⚠️ 현재 과정 userID 조회 실패:", e);
             return null;
@@ -620,7 +891,7 @@
 
     function startOrResumeAutoStudy(source) {
         console.log(`🚀 자동 학습 ${source} → 학습하기 버튼 대기`);
-        
+
         waitForStudyButtons((btns) => {
             const state = loadState();
 
@@ -652,7 +923,7 @@
             const signature = getCurrentSignature(btns);
             const prevState = loadState();
 
-            if (source === '복원' && prevState.lastSignature === signature) {
+            if (source === '복원' && prevState.lastSignature === signature && false) {
                 const retryCount = (prevState.staleRetry || 0) + 1;
 
                 console.warn(
@@ -711,7 +982,7 @@
         document.body.appendChild(btn);
 
         btn.addEventListener('click', () => {
-        
+
             const currentState = loadState();
 
             if (currentState.isAuto) {
